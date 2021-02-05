@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="taximonitor"
+  id="myeclipse.1437113613801"
+  context-root="/taximonitor"
+  j2ee-spec="5.0"
+  archive="taximonitor.war">
+  <attributes>
+    <attribute name="webrootdir" value="/WebRoot" />
+  </attributes>
+</project-module>
+

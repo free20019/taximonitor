@@ -1,0 +1,70 @@
+package com.tw.action;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import org.apache.struts2.ServletActionContext;
+
+import com.opensymphony.xwork2.Action;
+import com.opensymphony.xwork2.ActionContext;
+import com.tw.dao.userDao;
+import com.tw.entity.User;
+import com.tw.entity.station;
+
+public class LoginAction implements Action{
+	private String username;
+	private String password;
+	private String message;
+	private userDao userDao = new userDao();
+	public String execute() throws Exception {
+		return null;
+	}
+	public String login(){
+		User user=userDao.getUser(username, password);
+		if(user.getPassword()==null){
+			return ERROR;
+		}else{
+		HttpSession s=ServletActionContext.getRequest().getSession();
+		s.setAttribute("date", user.getDate_view_type());
+		s.setAttribute("um", user.getUsername());
+//		System.out.println("### "+s.getAttribute("um"));
+		ActionContext.getContext().getSession().put("id", user.getId());
+		ActionContext.getContext().getSession().put("username", user.getUsername());
+		ActionContext.getContext().getSession().put("job", user.getJob_number());
+		ActionContext.getContext().getSession().put("realname", user.getReal_name());
+		ActionContext.getContext().getSession().put("data", user.getDate_view_type());
+		ActionContext.getContext().getSession().put("parent", user.getParent());
+		ActionContext.getContext().getSession().put("ymqx", user.getYmqx());
+		ActionContext.getContext().getSession().put("glqx", user.getGlqx());
+			return SUCCESS;
+		}
+	}
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
+	public userDao getUserDao() {
+		return userDao;
+	}
+	public void setUserDao(userDao userDao) {
+		this.userDao = userDao;
+	}
+	
+}

@@ -1,0 +1,45 @@
+package com.tw.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.tw.entity.User;
+import com.tw.entity.station;
+import com.tw.util.DataBese;
+
+
+public class userDao {
+	public User getUser(String username, String password) {
+		User u=new User();
+		String sql="select * from tb_user u,tb_taxi_station s where u.station_id = s.id and "
+				+ " user_name='"+username+"' and password='"+password+"'";
+		PreparedStatement ps;
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			ps = con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				u.setId(rs.getString("id"));
+				u.setUsername(rs.getString("user_name")==null?"&nbsp;":rs.getString("user_name"));
+				u.setPassword(rs.getString("password")==null?"&nbsp;":rs.getString("password"));
+				u.setReal_name(rs.getString("real_name"));
+				u.setDate_view_type(rs.getString("date_view_type"));
+				u.setParent(rs.getString("parent"));
+				u.setYmqx(rs.getString("station_juri"));
+				u.setGlqx(rs.getString("station_admin"));
+			}
+			rs.close();
+			ps.close();
+			con.commit();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return u;
+	}
+}

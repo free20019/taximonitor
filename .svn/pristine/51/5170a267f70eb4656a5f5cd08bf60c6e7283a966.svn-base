@@ -1,0 +1,451 @@
+package com.tw.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+
+import javax.persistence.PrePersist;
+
+import com.tw.entity.Company;
+import com.tw.entity.User;
+import com.tw.entity.Vhic;
+import com.tw.entity.station;
+import com.tw.util.DataBese;
+
+public class JurisdictionDao {
+//查询数据
+	public List<User>finduser(String name){
+		List<User>list=new ArrayList<User>();
+		String sql="select * from tb_user u,tb_taxi_station s where u.station_id = s.id"
+				+ " and parent like '"+name+"%'";
+//		System.out.println(sql);
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				User u=new User();
+				u.setId(rs.getString("id"));
+				u.setDate_view_type(rs.getString("date_view_type")==null?"&nbsp;":rs.getString("date_view_type"));
+				u.setUsername(rs.getString("user_name")==null?"&nbsp;":rs.getString("user_name"));
+				u.setPassword(rs.getString("password")==null?"&nbsp;":rs.getString("password"));
+				u.setReal_name(rs.getString("real_name")==null?"&nbsp;":rs.getString("real_name"));
+				u.setStation_id(rs.getString("station_name"));
+				list.add(u);
+			}
+			rs.close();
+			ps.close();
+			con.commit();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//新增
+	public int useradd(String username,String password,String date_view_type,
+			String realname,String station_id,String parent){
+		String p = findparent(parent);
+		int count=0;
+		String sql="insert into tb_user(user_name,password,date_view_type,real_name,station_id,parent)" +
+				" values('"+username+"','"+password+"','"+date_view_type+"'" +
+						" ,'"+realname+"','"+station_id+"','"+p+"')";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			Statement st=con.createStatement();
+			count=st.executeUpdate(sql);
+			st.close();
+			con.commit();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			count=0;
+			try {
+				con.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		return count;
+	}
+	//通过parent找到该用户创建了几个用户,
+	//若为创建用户在新创建的用户parent为创建用户的parent+01,
+	//若创建了用户在该用户创建的最大用户的parent+1;
+	public String findparent(String parent){
+		String p = "";
+		List<User> list = new ArrayList<User>();
+		String sql = "select * from tb_user where parent like '"+parent+"%' order by parent desc";
+		try {
+			Connection con = DataBese.getConnectionOfOracle();
+			PreparedStatement ps = con.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			while(rs.next()){
+				User u = new User();
+				u.setParent(rs.getString("parent"));
+				list.add(u);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		if(list.size()<=1){
+			p = list.get(0).getParent()+"01";
+		}else{
+			p = (Long.parseLong(list.get(0).getParent())+1)+"";
+		}
+		return p;
+	}
+	//删除
+	public int userdel(String id){
+		int count=0;
+		String sql="delete from tb_user t where ID='"+id.trim()+"'";
+		PreparedStatement pstmt =null;
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			pstmt = con.prepareStatement(sql);
+			count = pstmt.executeUpdate();
+			pstmt.close();
+			con.commit();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				con.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		return count;
+	}
+	//根据id查询
+	public User userid(String id){
+		User u=new User();
+		String sql="select * from tb_user u,tb_taxi_station s where u.station_id = s.id and u.id='"+id.trim()+"'";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				u.setId(rs.getString("id"));
+				u.setDate_view_type(rs.getString("date_view_type"));
+				u.setUsername(rs.getString("user_name"));
+				u.setPassword(rs.getString("password"));
+				u.setReal_name(rs.getString("real_name"));
+				u.setStation_id(rs.getString("station_name"));
+				u.setJob_number(rs.getString("station_id"));
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return u;
+	}
+	//修改
+	public int edituser(String realname,String username,String password,String date_view_type,String id,String station_id){
+		int count=0;
+		String sql="update tb_user set real_name='"+realname+"', user_name='"+username+"', password='"+password+"'" +
+				", date_view_type='"+date_view_type+"', station_id='"+station_id+
+						"' where id='"+id+"'";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			Statement st=con.createStatement();
+			count=st.executeUpdate(sql);
+			st.close();
+			con.commit();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				con.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		return count;
+	}
+	//查询总公司
+	public List<Vhic>findba(){
+		List<Vhic>list=new ArrayList<Vhic>();
+		String sql="select * from HZGPS_TAXI.TB_BUSI_AREA@TAXILINK where  (ba_name = '杭州大众出租汽车股份有限公司'  or ba_name = '杭州客旅汽车出租公司' or ba_id = '11091' or ba_name = '杭州中润客运有限公司'  or ba_name = '杭州大川旅游汽车出租有限公司'  or ba_name = '杭州华旅客运有限公司'  or ba_name = '杭州安润客运有限公司' or ba_name like '%杭州和谐出租汽车服务管理有限公司%') order by ba_name";
+//		System.out.println(sql);
+		try {
+			Connection  con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Vhic v=new Vhic();
+				v.setBa_id(rs.getString("ba_id"));
+				v.setBa_name(rs.getString("ba_name"));
+				list.add(v);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//查询分公司
+	public List<Vhic>findcomp(String ba_id){
+		List<Vhic> list=new ArrayList<Vhic>();
+		String sql="select * from HZGPS_TAXI.TB_BUSI_AREA@TAXILINK a,HZGPS_TAXI.TB_COMPANY@TAXILINK c where a.ba_id=c.ba_id ";
+		if (ba_id.length()>=0&&ba_id!=null) {
+			sql+=" and ba_name ='"+ba_id+"'";
+		}
+		sql+=" order by comp_name";
+		try {
+			Connection  con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Vhic v=new Vhic();
+				v.setComp_name(rs.getString("comp_name"));
+				list.add(v);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	public List<Vhic>findvhicid(String comp_id){
+		List<Vhic>list=new ArrayList<Vhic>();
+		String sql="select * from HZGPS_TAXI.TB_COMPANY@TAXILINK c,HZGPS_TAXI.VW_VEHICLE@TAXILINK v where v.comp_id=c.comp_id  ";
+		if (comp_id.length()>=0&&comp_id!=null) {
+			sql+=" and c.comp_name ='"+comp_id+"'";
+		}
+		sql+=" order by vehi_no ";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Vhic v=new Vhic();
+				v.setVehi_no(rs.getString("vehi_no"));
+				list.add(v);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	public List<Vhic>findlogincomp(){
+		List<Vhic>list=new ArrayList<Vhic>();
+		String sql="select distinct real_name from TB_USER where real_name is not null";
+		sql+=" order by real_name ";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Vhic v=new Vhic();
+				v.setComp_name(rs.getString("real_name"));
+				list.add(v);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	public List<Vhic>findvhicgs(String comp_id){
+		List<Vhic>list=new ArrayList<Vhic>();
+		String sql="select * from HZGPS_TAXI.TB_BUSI_AREA@TAXILINK a,HZGPS_TAXI.VW_VEHICLE@TAXILINK v where a.ba_id=v.ba_id ";
+		if (comp_id.length()>=0&&comp_id!=null) {
+			sql+=" and a.ba_name ='"+comp_id+"'";
+		}
+		sql+=" order by vehi_no ";
+		try {
+			Connection  con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				Vhic v=new Vhic();
+				v.setVehi_no(rs.getString("vehi_no"));
+				list.add(v);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//新增岗位
+	public int addstation(String stationname,String stationjuri,String stationadmin){
+		int count=0;
+		String sql="insert into TB_TAXI_STATION (STATION_NAME,STATION_JURI,station_admin) values('"+stationname+"','"+stationjuri+"','"+stationadmin+"')";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			Statement st=con.createStatement();
+			count=st.executeUpdate(sql);
+			st.close();
+			con.commit();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			count=0;
+			try {
+				con.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		return count;
+	}
+	//查看岗位
+	public List<station>findstation(){
+		List<station>list=new ArrayList<station>();
+		String sql="select * from TB_TAXI_STATION t ";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				station s=new station();
+				s.setStation_juri(rs.getString("station_juri")==null?"&nbsp;":rs.getString("station_juri"));
+				s.setStation_name(rs.getString("station_name")==null?"&nbsp;":rs.getString("station_name"));
+				s.setStation_admin(rs.getString("station_admin")==null?"&nbsp;":rs.getString("station_admin"));
+				s.setId(rs.getString("id"));
+				list.add(s);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	//根据id查询岗位
+	public station stationid(String id){
+		station s=new station();
+		String sql="select * from TB_TAXI_STATION t where id='"+id+"'";
+		try {
+			Connection con=DataBese.getConnectionOfOracle();
+			PreparedStatement ps=con.prepareStatement(sql);
+			ResultSet rs=ps.executeQuery();
+			while(rs.next()){
+				s.setStation_admin(rs.getString("station_admin")==null?"&nbsp;":rs.getString("station_admin"));
+				s.setStation_juri(rs.getString("station_juri")==null?"&nbsp;":rs.getString("station_juri"));
+				s.setStation_name(rs.getString("station_name")==null?"&nbsp;":rs.getString("station_name"));
+				s.setId(rs.getString("id")==null?"&nbsp":rs.getString("id"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return s;
+	}
+	//根据id删除岗位
+	public int stationdel(String id){
+		int count=0;
+		String sql="delete from TB_TAXI_STATION where id='"+id+"'";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			Statement st=con.createStatement();
+			count=st.executeUpdate(sql);
+			st.close();
+			con.commit();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				con.rollback();
+				count=0;
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		return count;
+	}
+	//根据id修改岗位
+	public int editstation(String id,String stationname,String stationadmin,String stationjuri){
+		int count=0;
+		String sql="update TB_TAXI_STATION set station_name='"+stationname+"',station_admin='"
+		+stationadmin+"',station_juri='"+stationjuri+"' where id='"+id+"'";
+		Connection con=null;
+		try {
+			con=DataBese.getConnectionOfOracle();
+			Statement st=con.createStatement();
+			count=st.executeUpdate(sql);
+			st.close();
+			con.commit();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			try {
+				count=0;
+				con.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+		return count;
+	}
+	//查询所有公司
+	public List<Company> findcompany(String comp_name,String data,String user_name){
+		List<Company> list = new ArrayList<Company>();
+//		System.out.println(user_name);
+		String sql = "";
+		if(user_name.equals("twkj")){
+			sql = "select * from HZGPS_TAXI.TB_COMPANY@taxilink order by comp_name";
+		}else{
+			String[] a =  data.split(",");
+			String comp = "";
+			for (int i = 0; i < a.length; i++) {
+				comp +="'"+a[i]+"',";
+			}
+			comp = comp.substring(0, comp.length()-1);
+			sql = "select * from HZGPS_TAXI.TB_COMPANY@taxilink where comp_name in ("+comp+") ";
+			if(comp_name!=null&&comp_name.length()>0){
+				sql += " and comp_name like '"+comp_name+"'";
+			}
+			sql += "order by comp_name ";
+		}
+//		System.out.println("@@   "+sql);
+			try {
+				Connection con = DataBese.getConnectionOfOracle();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery();
+				while(rs.next()){
+					Company c = new Company();
+					c.setBaid(rs.getString("comp_id"));
+					c.setName(rs.getString("comp_name"));
+					list.add(c);
+				}
+				rs.close();
+				ps.close();
+				con.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		return list;
+	}
+}

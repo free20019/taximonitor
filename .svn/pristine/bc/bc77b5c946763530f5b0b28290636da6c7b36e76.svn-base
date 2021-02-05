@@ -1,0 +1,355 @@
+package com.tw.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+
+
+
+
+
+
+
+
+import com.tw.entity.Condition;
+import com.tw.entity.OperatingData;
+import com.tw.util.DataBese;
+import com.tw.util.PageHelper;
+
+/**
+ * @category：营运数据统计，营运交易查询，群组营运交易查询等相关查询
+ * @author： sven.zhang
+ * @since：2015.3.25
+ * */
+public class OperatingDataDao {
+	private Connection con;
+	private PreparedStatement ps;
+	private ResultSet rs;
+	private DecimalFormat df =new DecimalFormat("0.00");
+//	private Date d=new Date();
+//	private SimpleDateFormat sdformat =new SimpleDateFormat("yyyy");
+//	private String time=sdformat.format(d);
+	//营运交易查询
+	public List<OperatingData> getBusiness(Condition condition, PageHelper page,String data,String realname){
+		String table_name="";
+		String datt = condition.getStartTime().substring(0, 4);
+		String dd = condition.getStartTime().substring(0,4)+condition.getStartTime().substring(5,7);
+		if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+			table_name = "JIJIAQI.TB_CITIZEN_"+datt;
+		}else{
+			table_name = "jjq.JJQ"+dd+"_1@taxilink89";
+		}
+		String[] d = data.split(",");
+		String comp = "";
+		for (int i = 0; i < d.length; i++) {
+			comp += "'"+d[i]+"',";
+		}
+		comp=comp.substring(0, comp.length()-1);
+		List<OperatingData> list = new ArrayList<OperatingData>();
+		StringBuffer sql = new StringBuffer("select * from(select p.* ,rownum rn from(select t1.*,v1.*from");
+		sql.append("(select * from  "+table_name+" t  where shangche>=to_date(");
+		sql.append("'"+condition.getStartTime()+"','yyyy-MM-dd hh24:mi:ss') and shangche<=to_date(");
+		sql.append("'"+condition.getEndTime()+"','yyyy-MM-dd hh24:mi:ss')");
+		if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+		}else{
+			sql.append(" and flag = '1000000000'");
+		}
+		sql.append(")t1,(select * from HZGPS_TAXI.VW_VEHICLE@TAXILINK v  where  1=1  ");
+			if (condition.getCompany() != null){
+				sql.append(" and comp_name='" + condition.getCompany() + "' ");
+			}else {
+				sql.append(" and comp_name in ("+comp+")");
+			}
+		if (condition.getBranch() != null){
+			sql.append(" and comp_name='" + condition.getBranch() + "' ");
+		}
+		if (condition.getCardNo() != null&&condition.getCardNo().length()>0){
+			sql.append(" and vehi_no='" + condition.getCardNo() + "'");		
+		}
+		sql.append(")v1 where '浙'||t1.vhic =v1.vehi_no )p where rownum<=");
+		sql.append(page.getPageSize()* page.getCurrentPage()+" ) where rn> " );
+		sql.append( page.getPageSize()* (page.getCurrentPage() - 1) );
+		System.out.println(sql);
+		con = DataBese.getConnectionOfOracle();
+		try {
+			ps = con.prepareStatement(sql.toString());
+			rs = ps.executeQuery();
+			int hour = 0,minuts = 0,miao = 0;
+			while (rs.next()) {
+				OperatingData b = new OperatingData();								
+				b.setNumber(rs.getInt("rn"));
+				b.setVhic(rs.getString("vehi_no"));
+				b.setCertNo(rs.getString("yingyun"));
+				b.setUpTaxi(rs.getString("shangche"));
+				b.setDownTaxi(rs.getString("xiache"));
+				b.setMoney(rs.getFloat("jine") / 100);				
+				b.setDistance(rs.getFloat("jicheng")/10);
+				b.setEmpty(rs.getFloat("kongshi")/10);
+//				if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+					hour = Integer.parseInt(rs.getString("denghou").substring(0, 2));
+					minuts = Integer.parseInt(rs.getString("denghou").substring(2, 4));
+					miao = Integer.parseInt(rs.getString("denghou").substring(4, 6));
+					b.setWaitTime(hour*3600+minuts*60+miao);
+//				}else{
+//					b.setWaitTime(rs.getInt("denghou"));
+//				}
+				b.setType(rs.getString("jiaoyitype")==null?"":rs.getString("jiaoyitype"));
+				list.add(b);
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+
+			e.printStackTrace();
+		}
+
+		
+		return list;
+	}
+	//营运交易数量查询
+	public Integer getNumbyBusiness(Condition condition,String data,String realname){
+		String datt = condition.getStartTime().substring(0, 4);
+		String dd = condition.getStartTime().substring(0,4)+condition.getStartTime().substring(5,7);
+		String table_name="";
+		if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+			table_name = "JIJIAQI.TB_CITIZEN_"+datt;
+		}else{
+			table_name = "jjq.JJQ"+dd+"_1@taxilink89";
+		}
+		String[] d = data.split(",");
+		String comp = "";
+		for (int i = 0; i < d.length; i++) {
+			comp += "'"+d[i]+"',";
+		}
+		comp=comp.substring(0, comp.length()-1);
+		Integer t = 0;
+		StringBuffer sql = new StringBuffer("select count(*) c from( select * from " +
+				table_name + "   t" +
+				"  where shangche>=to_date('"+condition.getStartTime()+"','yyyy-MM-dd hh24:mi:ss')" +
+				"  and shangche<=to_date('"+condition.getEndTime()+"','yyyy-MM-dd hh24:mi:ss')");
+				if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+				}else{
+					sql.append(" and flag = '1000000000'");
+				}
+				sql.append(" and vhic in( select ltrim(vehi_no,'浙') from " +
+				"HZGPS_TAXI.VW_VEHICLE@TAXILINK v  where     1=1 ");
+			if (condition.getCompany() != null){
+				sql.append(" and comp_name='" + condition.getCompany() + "' ");
+			}else {
+				sql.append(" and comp_name in ("+comp+")");
+			}
+		if (condition.getBranch() != null){
+			sql.append(" and comp_name='" + condition.getBranch() + "' ");
+		}
+		if (condition.getCardNo() != null&&condition.getCardNo().length()>0){
+			sql.append(" and vehi_no='" + condition.getCardNo() + "'");		
+		}
+		sql.append(" ))");
+		System.out.println(sql);
+		con = DataBese.getConnectionOfOracle();
+		try {
+			ps = con.prepareStatement(sql.toString());
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				t=rs.getInt("c");
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+
+			e.printStackTrace();
+		}
+
+		
+		return t;
+	}
+	// 按照车号统计查询
+	public List<OperatingData> getAll(Condition condition, PageHelper page,String data,String realname) {
+		String table_name="";
+		StringBuffer sql = new StringBuffer();
+		List<OperatingData> list = new ArrayList<OperatingData>();
+		String datt = condition.getStartTime().substring(0, 4);
+//		if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+//			table_name = "JIJIAQI.TB_CITIZEN_"+datt;
+//		}else{
+//			table_name = "HZGPS_CITIZEN.TB_CITIZEN_"+datt+"@TAXILINK45";
+//		}
+		String[] d = data.split(",");
+		String comp = "";
+		for (int i = 0; i < d.length; i++) {
+			comp += "'"+d[i]+"',";
+		}
+		comp=comp.substring(0, comp.length()-1);
+//			List<OperatingData> list = new ArrayList<OperatingData>();
+
+//			StringBuffer sql = new StringBuffer("select * from(select p.*,rownum rn from(select t1.*,v1.*from ");
+//			sql.append("(select vhic,");
+//			sql.append("sum(TO_NUMBER(decode(decode(lower(nvl(replace(translate(jine, '$%', ' '),' ',''),0))," +
+//					"upper(nvl(replace(translate(jine, '$%', ' '),' ',''),0)),1,0),1,nvl(replace(" +
+//					"translate(jine, '$%', ' '),' ',''),0),0))) st,count(vhic) ct,sum(TO_NUMBER(" +
+//					"decode(decode(lower(nvl(replace(translate(substr(denghou,-2,2), '$%', ' '),' ',''),0))" +
+//					",upper(nvl(replace(translate(substr(denghou,-2,2), '$%', ' '),' ',''),0)),1,0),1," +
+//					"nvl(replace(translate(substr(denghou,-2,2), '$%', ' '),' ',''),0),0))+TO_NUMBER" +
+//					"(decode(decode(lower(nvl(replace(translate(substr(denghou,-4,2), '$%', ' '),' ',''),0))" +
+//					",upper(nvl(replace(translate(substr(denghou,-4,2), '$%', ' '),' ',''),0)),1,0),1," +
+//					"nvl(replace(translate(substr(denghou,-4,2), '$%', ' '),' ',''),0),0))*60+ " +
+//					"TO_NUMBER(decode(decode(lower(nvl(replace(translate(substr(denghou,-6,2), " +
+//					"'$%', ' '),' ',''),0)),upper(nvl(replace(translate(substr(denghou,-6,2), '$%', ' ')" +
+//					",' ',''),0)),1,0),1,nvl(replace(translate(substr(denghou,-6,2), '$%', ' '),' ',''),0),0)" +
+//					")*3600) waitTime, sum(TO_NUMBER(decode(decode(lower(nvl(replace" +
+//					"(translate(jicheng, '$%', ' '),' ',''),0)),upper(nvl(replace(translate(jicheng, '$%', ' ')" +
+//					",' ',''),0)),1,0),1,nvl(replace(translate(jicheng, '$%', ' '),' ',''),0),0))) distance, " +
+//					"sum(TO_NUMBER(decode(decode(lower(nvl(replace(translate(kongshi, '$%', ' ')" +
+//					",' ',''),0)),upper(nvl(replace(translate(kongshi, '$%', ' '),' ',''),0)),1,0),1," +
+//					"nvl(replace(translate(kongshi, '$%', ' '),' ',''),0),0))) empty1, " +
+//					"sum((xiache-shangche)*60*24*60)time1");
+//			sql.append(" from  "+table_name+" t  where shangche>=to_date(");
+//			sql.append("'"+condition.getStartTime()+"','yyyy-MM-dd hh24:mi:ss') and shangche<=to_date(");
+//			sql.append("'"+condition.getEndTime()+"','yyyy-MM-dd hh24:mi:ss')group by vhic)t1,");
+//			sql.append("(select * from HZGPS_TAXI.VW_VEHICLE@TAXILINK v  where   1=1 ");
+//				sql.append(" and comp_name in ("+comp+")");
+//			if (condition.getCompany() != null)
+//				sql.append(" and ba_name='" + condition.getCompany() + "' ");
+//			if (condition.getBranch() != null)
+//				sql.append(" and comp_name='" + condition.getBranch() + "' ");
+//			if (condition.getCardNo() != null&&condition.getCardNo().length()>0)
+//				sql.append(" and vehi_no='" + condition.getCardNo() + "'");		
+//			sql.append(")v1 where '浙'||t1.vhic =v1.vehi_no order by ba_name asc,comp_name asc,vehi_no asc )p where rownum<=");
+//			sql.append(page.getPageSize()* page.getCurrentPage()+") where rn> " );
+//			sql.append( page.getPageSize()* (page.getCurrentPage() - 1));
+		String st = condition.getStartTime().replaceAll("-", "");
+		String et = condition.getEndTime().replaceAll("-", "");
+		String tab = "jjq.JJQ_TJ_"+st.substring(0, 6)+"_DAY@taxilink89";
+		sql.append("select t1.*,rownum rn from (select cphm vehi_no,zgs ba_name,fgs comp_name,sum(tjcs) ct,sum(jine) * 100 st"
+				+ ",sum(szlc) * 10 distance,sum(kslc)*10 empty1,sum(yssc) * 60 time1,sum(dhsj) * 60 waitTime"
+				+ " from "+tab+" where type = '5'");
+		sql.append(" and day >='"+st+"'");
+		sql.append(" and day <='"+et+"'");
+		sql.append(" and fgs in ("+comp+")");
+		if (condition.getCompany() != null)
+			sql.append(" and zgs='" + condition.getCompany() + "' ");
+		if (condition.getBranch() != null)
+			sql.append(" and fgs='" + condition.getBranch() + "' ");
+		if (condition.getCardNo() != null&&condition.getCardNo().length()>0)
+			sql.append(" and '浙'||cphm='" + condition.getCardNo() + "'");	
+		sql.append("group by cphm, zgs, fgs order by comp_name,cphm) t1 where"
+				+ " rownum <="+page.getPageSize()* page.getCurrentPage()+" and rownum >"+page.getPageSize()* (page.getCurrentPage() - 1));
+			System.out.println(sql);
+			con = DataBese.getConnectionOfOracle();
+			try {
+				ps = con.prepareStatement(sql.toString());
+				rs = ps.executeQuery();
+				int hour = 0,minuts = 0,miao = 0;
+				while (rs.next()) {
+					OperatingData b = new OperatingData();
+					b.setCompany(rs.getString("ba_name"));
+					b.setBranch(rs.getString("comp_name"));
+					b.setNumber(rs.getInt("rn"));
+					b.setVhic(rs.getString("vehi_no"));
+					b.setMoney(rs.getFloat("st") / 100);
+					b.setTimes(rs.getInt("ct"));				
+					b.setDistance(rs.getFloat("distance")/10);
+					b.setTimeOut(rs.getInt("time1"));
+					b.setEmpty(rs.getFloat("empty1")/10);
+//					hour = Integer.parseInt(rs.getString("denghou").substring(0, 2));
+//					minuts = Integer.parseInt(rs.getString("denghou").substring(2, 4));
+//					miao = Integer.parseInt(rs.getString("denghou").substring(4, 6));
+//					b.setWaitTime(hour*3600+minuts*60+miao);
+//					if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+//						b.setWaitTime(rs.getInt("waitTime")/1000);
+//					}else{
+						b.setWaitTime(rs.getInt("waitTime"));
+//					}
+					list.add(b);
+				}
+				rs.close();
+				ps.close();
+				con.close();
+			} catch (SQLException e) {
+
+				e.printStackTrace();
+			}
+
+			return list;
+		}
+
+	
+	// 按车号获取数据总数量查询
+	public Integer geData(Condition condition,String data,String realname) {
+		System.out.println(condition.getBranch());
+		String table_name="";
+		Integer t = 0;
+//		String datt = condition.getStartTime().substring(0, 4);
+//		if(realname.indexOf("余杭")>=0||realname.indexOf("临平")>=0||realname.indexOf("临安")>=0){
+//			table_name = "JIJIAQI.TB_CITIZEN_"+datt;
+//		}else{
+//			table_name = "HZGPS_CITIZEN.TB_CITIZEN_"+datt+"@TAXILINK45";
+//		}
+//		
+//		String[] d = data.split(",");
+//		String comp = "";
+//		for (int i = 0; i < d.length; i++) {
+//			comp += "'"+d[i]+"',";
+//		}
+//		comp=comp.substring(0, comp.length()-1);
+//		StringBuffer sql = new StringBuffer("select * from (select distinct(vhic)from  "+table_name+" t where shangche>=to_date(");
+//		sql.append("'"+condition.getStartTime()+"','yyyy-MM-dd hh24:mi:ss') and shangche<=to_date(");
+//		sql.append("'"+condition.getEndTime()+"','yyyy-MM-dd hh24:mi:ss'))t1,");
+//		sql.append("(select *from HZGPS_TAXI.VW_VEHICLE@TAXILINK v where  1=1 ");
+//			sql.append(" and comp_name in ("+comp+")");
+//		if (condition.getCompany() != null)			
+//			sql = sql.append(" and ba_name='" + condition.getCompany() + "' ");
+//		if (condition.getBranch() != null)
+//			sql = sql.append(" and comp_name='" + condition.getBranch() + "' ");		
+//		if (condition.getCardNo() != null&&condition.getCardNo().length()>0)
+//			sql = sql.append(" and vehi_no='" + condition.getCardNo() + "'");
+//		sql.append(")v1 where  '浙'||t1.vhic=v1.vehi_no");
+		String[] d = data.split(",");
+		String comp = "";
+		for (int i = 0; i < d.length; i++) {
+			comp += "'"+d[i]+"',";
+		}
+		comp=comp.substring(0, comp.length()-1);
+		StringBuffer sql = new StringBuffer();
+		String st = condition.getStartTime().replaceAll("-", "");
+		String et = condition.getEndTime().replaceAll("-", "");
+		String tab = "jjq.JJQ_TJ_"+st.substring(0, 6)+"_DAY@taxilink89";
+		sql.append("select cphm vehi_no,zgs ba_name,fgs comp_name,sum(tjcs) ct,sum(jine) * 100 st"
+				+ ",sum(szlc) * 10 distance,sum(kslc) empty1,sum(yssc) * 60 time1,sum(dhsj) * 60 waitTime"
+				+ " from "+tab+" where type = '5'");
+		sql.append(" and day >='"+st+"'");
+		sql.append(" and day <='"+et+"'");
+		sql.append(" and fgs in ("+comp+")");
+		if (condition.getCompany() != null)
+			sql.append(" and zgs='" + condition.getCompany() + "' ");
+		if (condition.getBranch() != null)
+			sql.append(" and fgs='" + condition.getBranch() + "' ");
+		if (condition.getCardNo() != null&&condition.getCardNo().length()>0)
+			sql.append(" and '浙'||cphm='" + condition.getCardNo() + "'");	
+		sql.append("group by cphm, zgs, fgs order by comp_name,cphm");
+		System.out.println("@   "+sql);
+		con = DataBese.getConnectionOfOracle();
+		try {
+			ps = con.prepareStatement(sql.toString());
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				++t;
+			}
+			rs.close();
+			ps.close();
+			con.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return t;
+	}
+}

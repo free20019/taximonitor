@@ -1,0 +1,516 @@
+/**
+ * 营运统计,查询相关页面JS
+ */
+//vehicle.jsp
+//获取当前日期
+$(document).ready(function(){
+	$('#vehi').hide();
+	var mydate = new Date();
+	var y=(mydate.getFullYear()).toString();
+	var m=(mydate.getMonth()+1).toString();
+	if(m.length==1){
+		m="0"+m;
+	}
+	var d=mydate.getDate().toString();
+	if(d.length==1){
+		d="0"+d;
+	}
+	var time=y+"-"+m+"-"+d; 
+	$("#endTime").val(time);
+	$("#startTime").val(time);
+});
+//获取公司
+$(document).ready(function(){
+	var msg = $('#search').data('msg');
+	if(msg =="vehicle"){
+		$.ajax({
+			url:"getInfo.action",
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){	
+			$('#company').empty();
+			$("#company").append("<option value='0' >--选择公司--</option>");
+			var list = data.compList;
+			if(list.length == 1){
+				$("#company").append("<option value='"+list[0]+"'>"+list[0]+"</option>");
+				 getBranch(list[0]);
+			}else{
+				for(var i=0;i<list.length;i++){
+					$('#company').append("<option value='"+list[i]+"'>"+list[i]+"</option>");
+				}
+			}
+			
+		}
+		});
+	}
+});
+$('#company').change(function(){
+	var comp = $('#company option:selected').text();
+	getBranch(comp);
+	getCard();
+	getSelect();
+
+});
+	
+
+//获取分公司
+function getBranch(comp){
+	$.ajax({
+		url:"getBranch.action",
+		data:{
+			"con.company":comp,
+		},
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){
+			var list = data.baList;
+			$("#branch").empty();			
+				$("#branch").append("<option value='0' selected ='selected' >--选择分公司--</option>");
+				for(var i=0;i<list.length;i++){
+					$("#branch").append("<option value='"+list[i]+"'>"+list[i]+"</option>");				
+				}
+		}
+	});
+}
+$('#branch').change(function(){
+		getCard();
+		getSelect();
+	
+});
+//获取车号 
+//$(document).ready(function(){
+//	var msg = $('#search').data('msg');
+//	if(msg == "vehicle"){		
+//		$.ajax({
+//			url:"getCard.action",		
+//			dataType:"JSON",
+//			type:"POST",
+//			async:false,
+//			success:function(data){
+//				var list = data.cardList;
+//				$("#cardNo").empty();
+//				$("#cardNo").append("<option value='0' >--选择车号--</option>");
+//				for(var i=0;i<list.length;i++){
+//					$("#cardNo").append("<option value='"+list[i]+"'>"+list[i]+"</option>");
+//				}
+//				getSelect();
+//			}
+//		});
+//	}
+//});
+$(document).ready(
+		function() {
+			$.ajax( {
+				url : 'findvhic1.action',
+				type : 'post',
+				data : {},
+				dataType : 'json',
+				timeout : 180000,
+				success : function(json) {
+					$("#cardNono").empty();
+					var cust=json.list;
+					var tab="";
+					for ( var i = 0; i < cust.length; i++) {
+						tab+="<option value='"+cust[i].vehi_no+"'></option>";
+					}
+					$("#cardNono").html(tab);
+				},
+				error : function() {
+
+				}
+			});
+			
+		})
+
+//function getCard(){	
+//	var comp = $('#company option:selected').text();
+//	var branch = $('#branch option:selected').text();
+//	$.ajax({
+//		url:"getCard.action",
+//		data:{
+//			"con.company":comp,
+//			"con.branch":branch
+//		},
+//		dataType:"JSON",
+//		type:"POST",
+//		async:true,
+//		success:function(data){
+//			var list = data.cardList;
+//			$("#cardNo").empty();			
+//			$("#cardNo").append("<option value='0' >--选择车号--</option>");
+//			if(list != null){
+//				
+//				for(var i=0;i<list.length;i++){
+//					$("#cardNo").append("<option value='"+list[i]+"'>"+list[i]+"</option>");
+//				}
+//				
+//			}
+//		}
+//	});
+//
+//}
+
+function getCard(){	
+	var comp = $('#company option:selected').text();
+	var branch = $('#branch option:selected').text();
+	$.ajax({
+		url:"getCard.action",
+		data:{
+			"con.company":comp,
+			"con.branch":branch
+		},
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){
+			$("#cardNono").empty();
+			var list = data.cardList;
+			var tab="";
+			for ( var i = 0; i < list.length; i++) {
+				tab+="<option value='"+list[i]+"'>"+list[i]+"</option>";
+			}
+			$("#cardNono").html(tab);
+		}
+	});
+
+}
+//筛选
+var arr ;
+function getSelect(){
+	 arr = new Array(); 
+	$("#cardNono option").each(function () {
+        var val = $(this).val(); //获取单个value
+        arr.push(val);
+    });
+}
+
+$('#test').blur(function(){
+	$("#cardNono").empty();   
+	for(var i=0;i<arr.length;i++){
+		if(arr[i].indexOf($("#test").val().toUpperCase())>=0){
+			if(arr[i]=="0"){
+				$("#cardNono").append("<option value='0' >--选择车辆--</option>");
+			}else{
+				$("#cardNono").append("<option value='"+arr[i]+"' >"+arr[i]+"</option>");
+			}
+		}	
+	}
+});
+
+//business.jsp
+//获取当前日期
+$(document).ready(function(){
+	$('#bus').hide();
+	var mydate = new Date();
+	var y=(mydate.getFullYear()).toString();
+	var m=(mydate.getMonth()+1).toString();
+	if(m.length==1){
+		m="0"+m;
+	}
+	var d=mydate.getDate().toString();
+	if(d.length==1){
+		d="0"+d;
+	}
+	var time=y+"-"+m+"-"+d; 
+	var time1=time+" 00:00:00"; 
+	var time2=time+" 23:59:59"; 
+	$("#endTime3").val(time2);
+	$("#startTime3").val(time1);
+});
+//获取公司
+$(document).ready(function(){
+	var msg = $('#search3').data('msg');
+	if(msg =="business"){
+		$.ajax({
+			url:"getInfo.action",
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){	
+			console.log(data)
+			$('#company3').empty();
+			$("#company3").append("<option value='0' >--选择公司--</option>");
+			var list = data.compList;
+			if(list.length == 1){
+				$("#company3").append("<option value='"+list[0]+"'>"+list[0]+"</option>");
+				 getBranch(list[0]);
+			}else{
+				for(var i=0;i<list.length;i++){
+					$('#company3').append("<option value='"+list[i]+"'>"+list[i]+"</option>");
+				}
+			}
+			
+		}
+		});
+	}
+});
+$('#company3').change(function(){
+	var comp = $('#company3 option:selected').text();
+	getBranch3(comp);
+	getCard3();
+	getSelect3();
+
+});
+	
+
+//获取分公司
+function getBranch3(comp){
+	$.ajax({
+		url:"getBranch.action",
+		data:{
+			"con.company":comp,
+		},
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){
+			var list = data.baList;
+			$("#branch3").empty();			
+				$("#branch3").append("<option value='0' selected ='selected' >--选择分公司--</option>");
+				for(var i=0;i<list.length;i++){
+					$("#branch3").append("<option value='"+list[i]+"'>"+list[i]+"</option>");				
+				}
+		}
+	});
+}
+$('#branch3').change(function(){
+		getCard3();
+		getSelect3();
+	
+});
+//获取车号 
+//$(document).ready(function(){
+//	var msg = $('#search3').data('msg');
+//	if(msg == "business"){
+//		$.ajax({
+//			url:"getCard.action",		
+//			dataType:"JSON",
+//			type:"POST",
+//			async:false,
+//			success:function(data){
+//				var list = data.cardList;
+//				var tab="";
+//				$("#cardNo3").empty();
+//				for(var i=0;i<list.length;i++){
+//					tab+="<option value='"+list[i]+"'>"+list[i]+"</option>"
+//				}
+//				$("#cardNo3").html(tab);
+//				getSelect3();
+//			}
+//		});
+//	}
+//});
+
+$(document).ready(
+		function() {
+			$.ajax( {
+				url : 'findvhic1.action',
+				type : 'post',
+				data : {},
+				dataType : 'json',
+				timeout : 180000,
+				success : function(json) {
+					var cust=json.list;
+					$("#cardNo33").empty();
+					var tab="";
+					for ( var i = 0; i < cust.length; i++) {
+						tab+="<option value='"+cust[i].vehi_no+"'></option>";
+					}
+					$("#cardNo33").html(tab);
+				},
+				error : function() {
+
+				}
+			});
+			
+		})
+
+function getCard3(){	
+	var comp = $('#company3 option:selected').text();
+	var branch = $('#branch3 option:selected').text();
+	$.ajax({
+		url:"getCard.action",
+		data:{
+			"con.company":comp,
+			"con.branch":branch
+		},
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){
+			var list = data.cardList;
+			$("#cardNo33").empty();
+			var tab="";
+			for ( var i = 0; i < list.length; i++) {
+				tab+="<option value='"+list[i]+"'>"+list[i]+"</option>";
+			}
+			$("#cardNo33").html(tab);
+		}
+	});
+
+}
+
+//筛选
+function getSelect3(){
+	arr = new Array(); 
+	$("#cardNo33 option").each(function () {
+        var val = $(this).val(); //获取单个value
+        arr.push(val);
+    });
+}
+$('#test3').blur(function(){
+	
+	$("#cardNo33").empty();   
+	console.log(arr.length);
+	for(var i=0;i<arr.length;i++){
+		if(arr[i].indexOf($("#test3").val().toUpperCase())>=0){
+			if(arr[i]=="0"){
+				$("#cardNo33").append("<option value='0' >--选择车号--</option>");
+			}else{
+				$("#cardNo33").append("<option value='"+arr[i]+"' >"+arr[i]+"</option>");
+			}
+		}	
+	}
+});
+
+
+//wxtj.jsp
+//获取当前日期
+$(document).ready(function(){
+	$('#bus').hide();
+	var mydate = new Date();
+	var y=(mydate.getFullYear()).toString();
+	var m=(mydate.getMonth()+1).toString();
+	if(m.length==1){
+		m="0"+m;
+	}
+	var d=mydate.getDate().toString();
+	if(d.length==1){
+		d="0"+d;
+	}
+	var time=y+"-"+m+"-"+d; 
+	var time1=time+" 00:00:00"; 
+	var time2=time+" 23:59:59"; 
+	$("#wxtjetime").val(time2);
+	$("#wxtjstime").val(time1);
+});
+//获取公司
+$(document).ready(function(){
+	var msg = $('#getwxlx').data('msg');
+	if(msg =="wxtj"){
+		$.ajax({
+			url:"getInfo.action",
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){	
+			$('#wxtjgs').empty();
+			$("#wxtjgs").append("<option value='0' >--选择公司--</option>");
+			var list = data.compList;
+			if(list.length == 1){
+				$("#wxtjgs").append("<option value='"+list[0]+"'>"+list[0]+"</option>");
+				 getBranch(list[0]);
+			}else{
+				for(var i=0;i<list.length;i++){
+					$('#wxtjgs').append("<option value='"+list[i]+"'>"+list[i]+"</option>");
+				}
+			}
+			
+		}
+		});
+	}
+});
+$('#wxtjgs').change(function(){
+	var comp = $('#wxtjgs option:selected').text();
+	getwxtjfgs(comp);
+	getCard4();
+	getSelect4();
+
+});
+	
+
+//获取分公司
+function getwxtjfgs(comp){
+	$.ajax({
+		url:"getBranch.action",
+		data:{
+			"con.company":comp,
+		},
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){
+			var list = data.baList;
+			$("#wxtjfgs").empty();			
+				$("#wxtjfgs").append("<option value='0' selected ='selected' >--选择分公司--</option>");
+				for(var i=0;i<list.length;i++){
+					$("#wxtjfgs").append("<option value='"+list[i]+"'>"+list[i]+"</option>");				
+				}
+		}
+	});
+}
+$('#wxtjfgs').change(function(){
+		getCard4();
+		getSelect4();
+	
+});
+
+$(document).ready(
+		function() {
+			$.ajax( {
+				url : 'findvhic1.action',
+				type : 'post',
+				data : {},
+				dataType : 'json',
+				timeout : 180000,
+				success : function(json) {
+					var cust=json.list;
+					$("#wxtjcphm1").empty();
+					var tab="";
+					for ( var i = 0; i < cust.length; i++) {
+						tab+="<option value='"+cust[i].vehi_no+"'></option>";
+					}
+					$("#wxtjcphm1").html(tab);
+				},
+				error : function() {
+
+				}
+			});
+			
+		})
+
+function getCard4(){	
+	var comp = $('#wxtjgs option:selected').text();
+	var branch = $('#wxtjfgs option:selected').text();
+	$.ajax({
+		url:"getCard.action",
+		data:{
+			"con.company":comp,
+			"con.branch":branch
+		},
+		dataType:"JSON",
+		type:"POST",
+		async:true,
+		success:function(data){
+			var list = data.cardList;
+			$("#wxtjcphm1").empty();
+			var tab="";
+			for ( var i = 0; i < list.length; i++) {
+				tab+="<option value='"+list[i]+"'>"+list[i]+"</option>";
+			}
+			$("#wxtjcphm1").html(tab);
+		}
+	});
+
+}
+
+//筛选
+function getSelect4(){
+	arr = new Array(); 
+	$("#wxtjcphm1 option").each(function () {
+      var val = $(this).val(); //获取单个value
+      arr.push(val);
+  });
+}

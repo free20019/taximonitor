@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN" "http://struts.apache.org/dtds/struts-2.5.dtd">
+<struts>
+<constant name="struts.enable.DynamicMethodInvocation" value=" true " />
+<constant name="struts.action.excludePattern" value="/dwr/.*,/services/.*"/>
+
+	<package name="struts2" extends="struts-default" strict-method-invocation="false">
+		<action name="login" class="com.tw.action.LoginAction" method="login">
+			<result name="success">/index.jsp</result>
+			<result name="error">/login1.html</result>
+		</action>
+		<action name="find" class="com.tw.action.FindAction" >
+			<result name="success">/jsp/cartrack.jsp</result>
+		</action>
+		
+		<action name="hkvideo" class="com.tw.action.VideoAction" method="hkyh">
+			<result name="success">/jsp/hkvideo.jsp</result>
+		</action>
+		<!-- 文件下载配置 -->
+	<action name="filedownload" class="com.tw.action.DownLoad">
+            <result name="success" type="stream">
+                <param name="contentType">${contentType}</param>
+                <param name="inputName">inputStream</param>                
+                <param name="bufferSize">20000000</param>
+                <param name="contentDisposition">filename="${filename}"</param>
+                <param name=""></param>
+            </result>
+	</action>
+	<action name="filedownload1" class="com.tw.action.DownLoad" method="video">
+            <result name="success" type="stream">
+                <param name="contentType">${contentType}</param>
+                <param name="inputName">inputStream</param>                
+                <param name="bufferSize">20000000</param>
+                <param name="contentDisposition">filename="${filename}"</param>
+                <param name=""></param>
+            </result>
+	</action>
+		 <!-- 车辆营运数据统计查询 -->
+        <action name="vexcel" class="com.tw.action.DataExcelAction" method="excelVehicle">  
+            <result name="success" type="stream">  
+                <param name="contentType">application/x-xls</param>  
+                <param name="contentDisposition">attachment;filename="${filename}"</param>  
+                <param name="inputName">inputPath</param>  
+            </result>  
+        </action>  
+         <!--5. 营运交易查询 -->
+        <action name="bexcel" class="com.tw.action.DataExcelAction" method="excelBus">  
+            <result name="success" type="stream">  
+                <param name="contentType">application/x-xls</param>  
+                <param name="contentDisposition">attachment;filename="${filename}"</param>  
+                <param name="inputName">inputPath</param>  
+            </result>  
+        </action>   
+	</package>
+	<package name="json" extends="json-default">
+	<!-- 查询车辆在地图上显示 -->
+		<action name="findvhic" class="com.tw.action.CarAction" method="findvhic">
+			<result type="json"/>
+		</action>
+		<action name="findvhic1" class="com.tw.action.CarAction" method="findvhic1">
+			<result type="json"/>
+		</action>
+	<!-- 查询车辆的历史数据在地图显示时间段内的路径 -->
+		<action name="vhichistory" class="com.tw.action.CarAction" method="findvhichistory">
+			<result type="json"/>
+		</action>
+		<action name="exporthistory" class="com.tw.action.CarAction" method="exporthistory">
+			<result type="json"/>
+		</action>
+	<!-- 车辆组增删改查 -->
+		<action name="findcargroup" class="com.tw.action.CarAction" method="findcargroup">
+			<result type="json"/>
+		</action>
+		<action name="findcargroupvhic" class="com.tw.action.CarAction" method="findcargroupvhic">
+			<result type="json"/>
+		</action>
+		<action name="delcargroup" class="com.tw.action.CarAction" method="delcargroup">
+			<result type="json"/>
+		</action>
+		<action name="addcargroup" class="com.tw.action.CarAction" method="addcargroup">
+			<result type="json"/>
+		</action>
+		<action name="findcargroupid" class="com.tw.action.CarAction" method="findcargroupid">
+			<result type="json"/>
+		</action>
+		<action name="editcargroup" class="com.tw.action.CarAction" method="editcargroup">
+			<result type="json"/>
+		</action>
+	<!-- 查询车辆组及组内车辆 -->
+		<action name="findgroupnum" class="com.tw.action.CarAction" method="findgroupnum">
+			<result type="json"/>
+		</action>
+	<!-- 查询车辆组内车辆详细信息 -->
+		<action name="findgroupinfo" class="com.tw.action.CarAction" method="findgroupinfo">
+			<result type="json"/>
+		</action>
+	<!-- 查询车辆在线下线载客空驶总数 -->
+		<action name="findnum" class="com.tw.action.CarAction" method="findnum">
+			<result type="json"/>
+		</action>
+	<!-- 区域管理 -->
+		<action name="findarea" class="com.tw.action.CarAction" method="findarea">
+			<result type="json"/>
+		</action>
+		<action name="addarea" class="com.tw.action.CarAction" method="addarea">
+			<result type="json"/>
+		</action>
+		<action name="editarea" class="com.tw.action.CarAction" method="editarea">
+			<result type="json"/>
+		</action>
+		<action name="delarea" class="com.tw.action.CarAction" method="delarea">
+			<result type="json"/>
+		</action>
+	<!-- 查询区域和车辆 -->
+		<action name="findareavhic" class="com.tw.action.CarAction" method="findareavhic">
+			<result type="json"/>
+		</action>
+	<!-- 电子围栏管理 -->
+		<action name="findfence" class="com.tw.action.CarAction" method="findfence">
+			<result type="json"/>
+		</action>
+		<action name="addfence" class="com.tw.action.CarAction" method="addfence">
+			<result type="json"/>
+		</action>
+		<action name="editfence" class="com.tw.action.CarAction" method="editfence">
+			<result type="json"/>
+		</action>
+		<action name="delfence" class="com.tw.action.CarAction" method="delfence">
+			<result type="json"/>
+		</action>
+	<!-- 查询电子围栏所管理的车辆信息 -->
+		<action name="findfencevhicinfo" class="com.tw.action.CarAction" method="findfencevhicinfo">
+			<result type="json"/>
+		</action>
+	<!-- 营运数据 -->
+		<action name="vehicle" class="com.tw.action.findoperaction" method="vehicle">
+			<result type="json"/>
+		</action>
+		<action name="getVehicle" class="com.tw.action.findoperaction" method="vehicle">
+			<result type="json"/>
+		</action>
+		<action name="business" class="com.tw.action.findoperaction" method="business">
+			<result type="json"/>
+		</action>
+		 <action name="getBusiness" class="com.tw.action.findoperaction" method="business">
+			<result type="json"/>
+		</action>
+	<!-- 营运数据中查询公司分公司车号 -->
+		<action name="getInfo" class="com.tw.action.GetInfoAction" method="company">
+			<result type="json"/>
+		</action>
+		<action name="getBranch" class="com.tw.action.GetInfoAction" method="branch">
+			<result type="json"/>
+		</action>
+		<action name="getCard" class="com.tw.action.GetInfoAction" method="cardNo">
+			<result type="json"/>
+		</action>	
+	<!-- 上线率、重车率 -->
+		<action name="findonline" class="com.tw.action.LoadOnlineAction" method="findonline">
+    		<result type="json"/>
+    	</action>
+    	<action name="findallonlineexcle" class="com.tw.action.LoadOnlineAction" method="findallonlineexcle">
+    		<result type="json"/>
+    	</action>
+    	<action name="findallloadexcle" class="com.tw.action.LoadOnlineAction" method="findallloadexcle">
+    		<result type="json"/>
+    	</action>
+    <!-- 营运率 -->
+    	<action name="findyingyun" class="com.tw.action.YingYunAction" method="findyingyun">
+    		<result type="json"/>
+    	</action>
+    	<action name="findyingyunexcle" class="com.tw.action.YingYunAction" method="findyingyunexcle">
+    		<result type="json"/>
+    	</action>	
+    <!-- 无营运数据 -->
+   		 <action name="findoffline" class="com.tw.action.FindAction" method="findoffline">
+			<result type="json"/>
+		</action>
+		<action name="findofflineexcle" class="com.tw.action.FindAction" method="findofflineexcle">
+			<result type="json"/>
+		</action>
+	<!-- 未上线车辆 -->
+		<action name="findnoline" class="com.tw.action.FindAction" method="findnoline">
+			<result type="json"/>
+		</action>
+		<action name="findnolineexcle" class="com.tw.action.FindAction" method="findnolineexcle">
+			<result type="json"/>
+		</action>
+	<!-- 上线无营运车辆 -->
+		<action name="findonlineoffbus" class="com.tw.action.FindAction" method="findonlineoffbus">
+			<result type="json"/>
+		</action>
+		<action name="findonlineoffbusexcle" class="com.tw.action.FindAction" method="findonlineoffbusexcle">
+			<result type="json"/>
+		</action>
+	<!-- 未上线营运车辆 -->
+		<action name="findnolinebus" class="com.tw.action.FindAction" method="findnolinebus">
+			<result type="json"/>
+		</action>
+		<action name="findnolinebusexcle" class="com.tw.action.FindAction" method="findnolinebusexcle">
+			<result type="json"/>
+		</action>
+	<!-- 未上线未营运车辆 -->
+		<action name="findnolineoffbus" class="com.tw.action.FindAction" method="findnolineoffbus">
+			<result type="json"/>
+		</action>
+		<action name="findnolineoffbusexcle" class="com.tw.action.FindAction" method="findnolineoffbusexcle">
+			<result type="json"/>
+		</action>
+	<!-- 无空车变化查询 -->
+		<action name="findnoempty" class="com.tw.action.FindAction" method="findnoempty">
+			<result type="json"/>
+		</action>
+		<action name="findnoemptyexcle" class="com.tw.action.FindAction" method="findnoemptyexcle">
+			<result type="json"/>
+		</action>
+	<!-- 实载率 -->
+		<action name="findshizai" class="com.tw.action.ShiZaiAction" method="findshizai">
+			<result type="json"/>
+		</action>
+		<action name="findshizaiexcle" class="com.tw.action.ShiZaiAction" method="findshizaiexcle">
+			<result type="json"/>
+		</action>
+	<!-- 营运收益分析 -->
+		<action name="findyyshouyi" class="com.tw.action.YYShouYiAction" method="findyyshouyi">
+			<result type="json"/>
+		</action>
+		<action name="findyyshouyiexcle" class="com.tw.action.YYShouYiAction" method="findyyshouyiexcle">
+			<result type="json"/>
+		</action>
+	<!-- 下拉列表框 -->
+		<action name="findba" class="com.tw.action.JurisdictionAction" method="findba">
+			<result type="json"/>
+		</action>
+		<action name="findcomp" class="com.tw.action.JurisdictionAction" method="findcomp">
+			<result type="json"/>
+		</action>
+		<action name="findvehi" class="com.tw.action.JurisdictionAction" method="findvehi">
+			<result type="json"/>
+		</action>
+	<!-- 日报表 -->
+		<action name="finddayform" class="com.tw.action.FormAction" method="finddayform">
+			<result type="json"/>
+		</action>
+		<action name="finddayformexcle" class="com.tw.action.FormAction" method="finddayformexcle">
+			<result type="json"/>
+		</action>
+	<!-- 月报表 -->
+		<action name="findmonthform" class="com.tw.action.FormAction" method="findmonthform">
+			<result type="json"/>
+		</action>
+		<action name="findmonthformexcle" class="com.tw.action.FormAction" method="findmonthformexcle">
+			<result type="json"/>
+		</action>
+	<!-- 用户 -->
+		<action name="finduser" class="com.tw.action.JurisdictionAction" method="finduser">
+			<result type="json"/>
+		</action>
+		<action name="adduser" class="com.tw.action.JurisdictionAction" method="adduser">
+			<result type="json"/>
+		</action>
+		<action name="deluser" class="com.tw.action.JurisdictionAction" method="deluser">
+			<result type="json"/>
+		</action>
+		<action name="iduser" class="com.tw.action.JurisdictionAction" method="iduser">
+			<result type="json"/>
+		</action>
+		<action name="edituser" class="com.tw.action.JurisdictionAction" method="edituser">
+			<result type="json"/>
+		</action>
+	<!-- 车辆组下拉列表框 -->
+		<action name="findcompgroup" class="com.tw.action.GroupAction" method="findcompname">
+			<result type="json"/>
+		</action>
+	<!-- 实载里程分析 -->
+		<action name="findsslicheng" class="com.tw.action.SSlichengAction" method="findshizai">
+			<result type="json"/>
+		</action>
+		<action name="findsslichengexcle" class="com.tw.action.SSlichengAction" method="findshizaiexcle">
+			<result type="json"/>
+		</action>
+	<!-- 视频控件下载 -->
+		<action name="video" class="com.tw.action.VideoAction" method="video">
+			<result type="json"/>
+		</action>
+		<!-- 视频监控 -->
+		<action name="queryvediovhic" class="com.tw.action.VideoAction" method="queryvediovhic">
+			<result type="json"/>
+		</action>
+	<!-- 查询通用视频终端的公司 -->
+		<action name="findmdtvideo" class="com.tw.action.VideoAction" method="findmdtvideo">
+			<result type="json"/>
+		</action>
+	<!-- 权限控制 -->
+	<!-- 岗位管理 -->
+		<action name="findstation" class="com.tw.action.JurisdictionAction" method="findstation">
+			<result type="json"/>
+		</action>
+		<action name="addstation" class="com.tw.action.JurisdictionAction" method="addstation">
+			<result type="json"/>
+		</action>
+		<action name="stationid" class="com.tw.action.JurisdictionAction" method="stationid">
+			<result type="json"/>
+		</action>
+		<action name="stationedit" class="com.tw.action.JurisdictionAction" method="stationedit">
+			<result type="json"/>
+		</action>
+		<action name="stationdel" class="com.tw.action.JurisdictionAction" method="stationdel">
+			<result type="json"/>
+		</action>
+	<!-- 查询公司 -->
+		<action name="findcompany" class="com.tw.action.JurisdictionAction" method="findcompany">
+			<result type="json"/>
+		</action>
+	<!-- 失物查找 -->
+		<action name="findswcz" class="com.tw.action.swcz" method="findswcz">
+			<result type="json"/>
+		</action>
+		<action name="findswczexcle" class="com.tw.action.swcz" method="findswczexcle">
+			<result type="json"/>
+		</action>
+	<!-- 往终端发送信息 -->
+		<action name="send_message" class="com.tw.action.CarAction" method="send_message">
+			<result type="json"/>
+		</action>
+	<!-- 紧急报警 -->
+		<action name="findalarmstatus" class="com.tw.action.FormAction" method="findalarmstatus">
+			<result type="json"/>
+		</action>
+		<action name="addresss" class="com.tw.action.CarAction" method="addresss">
+			<result type="json">
+			</result>
+		</action>
+	<!-- 分屏监控 -->	
+		<action name="findcl3" class="com.tw.action.FindAction" method="findcl3">
+			<result type="json"/>
+		</action>
+		<action name="finddpjk" class="com.tw.action.FindAction" method="finddpjk">
+			<result type="json"/>
+		</action>
+	</package>
+</struts>

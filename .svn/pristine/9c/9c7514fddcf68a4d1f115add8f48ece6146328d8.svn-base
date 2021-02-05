@@ -1,0 +1,570 @@
+package com.tw.action;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import jxl.Workbook;
+import jxl.write.Label;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+
+import org.apache.struts2.ServletActionContext;
+
+import com.opensymphony.xwork2.Action;
+import com.opensymphony.xwork2.ActionContext;
+import com.tw.dao.ApplyDao;
+import com.tw.dao.LoadOnlineDAO;
+import com.tw.entity.Area;
+import com.tw.entity.LOADONLINE;
+import com.tw.entity.Vehicle;
+import com.tw.entity.Vhic;
+import com.tw.util.VhicComparator;
+
+
+public class ApplyAction implements Action{
+	private String time;
+	private String quyu;
+	private String day;
+	private String speed;
+	private String i;
+	private String id;
+	private String xlsfilename;
+	private String fanhuei;
+	private String action;
+	private String stime;
+	private String etime;
+	private String compname;
+	private String compid;
+	private String areaid;
+	private String vehicle_no;
+	private String info;
+	private String reason;
+	private String new_vehicle;
+	private List<Vehicle>vehicle=new ArrayList<Vehicle>();
+	private List<Vhic>list=new ArrayList<Vhic>();
+	private List<String>list1=new ArrayList<String>();
+	private List<Vhic>list2=new ArrayList<Vhic>();
+	private List<Vhic>list3=new ArrayList<Vhic>();
+	private List<Vhic>list4=new ArrayList<Vhic>();
+	private List<Vhic>list5=new ArrayList<Vhic>();
+	private List<Vhic>list6=new ArrayList<Vhic>();
+	private List<Vhic>list7=new ArrayList<Vhic>();
+	private List<Vhic>list8=new ArrayList<Vhic>();
+	private List<Vhic>listexcle=new ArrayList<Vhic>();
+	private String vhic;
+	ApplyDao f=new ApplyDao();
+	//查询车辆转入申请
+	public String findvehicleapplication(){
+		list=f.findvehicleapplication(stime,etime,vehicle_no);
+		return SUCCESS;
+	}
+	//增加车辆转入申请
+	public String addvehicleapplication(){
+		info=f.addvehicleapplication(vehicle_no,compname,time);
+		return SUCCESS;
+	}
+	//修改车辆转入申请
+	public String editvehicleapplication(){
+		info=f.editvehicleapplication(vehicle_no,compname,time,id);
+		return SUCCESS;
+	}
+	//删除车辆转入申请
+	public String deletevehicleapplication(){
+		info=f.deletevehicleapplication(id);
+		return SUCCESS;
+	}
+
+	public String findvehicleapplicationexcle(){
+		try {
+			list=f.findvehicleapplication(stime,etime,vehicle_no);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+			try{
+				Date date = new Date();
+				String logfile=ServletActionContext.getServletContext().getRealPath("/");
+				String dateStr2 = new Timestamp(date.getTime()).toString();
+				String MV_VERSION="";
+				MV_VERSION=MV_VERSION+dateStr2.substring(0,4);
+				MV_VERSION=MV_VERSION+dateStr2.substring(5,7);
+				MV_VERSION=MV_VERSION+dateStr2.substring(8,10);
+				MV_VERSION=MV_VERSION+dateStr2.substring(11,13);
+				MV_VERSION=MV_VERSION+dateStr2.substring(14,16);
+				MV_VERSION=MV_VERSION+dateStr2.substring(17,19);
+				logfile=logfile+"count\\";
+				File file1 = new File(logfile);//创建文件夹
+				if (!file1.exists()) {
+					file1.mkdir();
+					//System.err.println(file + " 文件夹已创建！");
+				}
+				DelAllFile d=new DelAllFile();
+				d.delAllFile(logfile);
+				File file= new File(logfile+""+MV_VERSION+".xls"); 
+				this.xlsfilename=""+MV_VERSION+".xls";
+				//this.xlsfilepath="//evaluation//"+xlsfilename;
+				file.createNewFile(); //建立要输出的文件 
+
+				OutputStream os = new FileOutputStream(file);//使用文件缓冲 
+
+				WritableWorkbook wwb = Workbook.createWorkbook(os);//取EXCEL操作实例 
+
+				WritableSheet ws = wwb.createSheet("车辆转入申请",0);//创建Excel工作表 指定名称和位置 
+				Label label ;
+            	label = new Label(0,0,"车牌号码"); 
+            	ws.addCell(label);
+            	label = new Label(1,0,"原公司名称"); 
+            	ws.addCell(label);
+            	label = new Label(2,0,"现公司名称"); 
+            	ws.addCell(label);
+            	label = new Label(3,0,"转入时间"); 
+            	ws.addCell(label);
+            	label = new Label(4,0,"申请时间");           	
+            	ws.addCell(label);
+            	label = new Label(5,0,"审核状态"); 
+            	ws.addCell(label);
+            	label = new Label(6,0,"审核时间"); 
+            	ws.addCell(label);
+            	label = new Label(7,0,"审核原因"); 
+            	ws.addCell(label);
+                	for (int i = 0; i < list.size(); i++) {
+                    	label = new Label(0,i+1,list.get(i).getVehi_no()); 
+                    	ws.addCell(label);
+                    	label = new Label(1,i+1,list.get(i).getComp_name()); 
+                    	ws.addCell(label);
+                    	label = new Label(2,i+1,list.get(i).getBa_name()); 
+                    	ws.addCell(label);
+                    	label = new Label(3,i+1,list.get(i).getTime()); 
+                    	ws.addCell(label);
+                    	label = new Label(4,i+1,list.get(i).getOwn_name()); 
+                    	ws.addCell(label);                  	
+                    	label = new Label(5,i+1,list.get(i).getVehi_sim()); 
+                    	ws.addCell(label);
+                    	label = new Label(6,i+1,list.get(i).getOwn_tel()); 
+                    	ws.addCell(label);
+                    	label = new Label(7,i+1,list.get(i).getRun_times()); 
+                    	ws.addCell(label);
+					}
+                wwb.write();//写入文件 
+				wwb.close();
+				os.close();
+				this.fanhuei="成功导成Excel!";
+				this.action="filedownload.action?inputPath="+this.xlsfilename;
+			}catch(Exception e){
+				this.fanhuei="导出失败!";
+			}
+		
+		return SUCCESS;
+	}
+	//查询车辆报停申请
+	public String findvehiclestop(){
+		list2=f.findvehiclestop(stime,etime,vehicle_no);
+		return SUCCESS;
+	}
+	//增加车辆报停申请
+	public String addvehiclestop(){
+		info=f.addvehiclestop(vehicle_no,reason,time);
+		return SUCCESS;
+	}
+	//修改车辆报停申请
+	public String editvehiclestop(){
+		info=f.editvehiclestop(vehicle_no,reason,time,id);
+		return SUCCESS;
+	}
+	//删除车辆报停申请
+	public String deletevehiclestop(){
+		info=f.deletevehiclestop(id);
+		return SUCCESS;
+	}
+
+	public String findvehiclestopexcle(){
+		try {
+			list2=f.findvehiclestop(stime,etime,vehicle_no);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+			try{
+				Date date = new Date();
+				String logfile=ServletActionContext.getServletContext().getRealPath("/");
+				String dateStr2 = new Timestamp(date.getTime()).toString();
+				String MV_VERSION="";
+				MV_VERSION=MV_VERSION+dateStr2.substring(0,4);
+				MV_VERSION=MV_VERSION+dateStr2.substring(5,7);
+				MV_VERSION=MV_VERSION+dateStr2.substring(8,10);
+				MV_VERSION=MV_VERSION+dateStr2.substring(11,13);
+				MV_VERSION=MV_VERSION+dateStr2.substring(14,16);
+				MV_VERSION=MV_VERSION+dateStr2.substring(17,19);
+				logfile=logfile+"count\\";
+				File file1 = new File(logfile);//创建文件夹
+				if (!file1.exists()) {
+					file1.mkdir();
+					//System.err.println(file + " 文件夹已创建！");
+				}
+				DelAllFile d=new DelAllFile();
+				d.delAllFile(logfile);
+				File file= new File(logfile+""+MV_VERSION+".xls"); 
+				this.xlsfilename=""+MV_VERSION+".xls";
+				//this.xlsfilepath="//evaluation//"+xlsfilename;
+				file.createNewFile(); //建立要输出的文件 
+
+				OutputStream os = new FileOutputStream(file);//使用文件缓冲 
+
+				WritableWorkbook wwb = Workbook.createWorkbook(os);//取EXCEL操作实例 
+
+				WritableSheet ws = wwb.createSheet("车辆转入申请",0);//创建Excel工作表 指定名称和位置 
+				Label label ;
+            	label = new Label(0,0,"公司名称"); 
+            	ws.addCell(label);
+            	label = new Label(1,0,"车牌号码"); 
+            	ws.addCell(label);
+            	label = new Label(2,0,"停报时间"); 
+            	ws.addCell(label);
+            	label = new Label(3,0,"停报原因"); 
+            	ws.addCell(label);
+            	label = new Label(4,0,"上报日期");           	
+            	ws.addCell(label);
+            	label = new Label(5,0,"审核状态"); 
+            	ws.addCell(label);
+            	label = new Label(6,0,"审核时间"); 
+            	ws.addCell(label);
+            	label = new Label(7,0,"审核原因"); 
+            	ws.addCell(label);
+                	for (int i = 0; i < list2.size(); i++) {
+                    	label = new Label(0,i+1,list2.get(i).getComp_name()); 
+                    	ws.addCell(label);
+                    	label = new Label(1,i+1,list2.get(i).getVehi_no()); 
+                    	ws.addCell(label);
+                    	label = new Label(2,i+1,list2.get(i).getOwn_name()); 
+                    	ws.addCell(label);
+                    	label = new Label(3,i+1,list2.get(i).getBa_name()); 
+                    	ws.addCell(label);
+                    	label = new Label(4,i+1,list2.get(i).getTime()); 
+                    	ws.addCell(label);                  	
+                    	label = new Label(5,i+1,list2.get(i).getVehi_sim()); 
+                    	ws.addCell(label);
+                    	label = new Label(6,i+1,list2.get(i).getOwn_tel()); 
+                    	ws.addCell(label);
+                    	label = new Label(7,i+1,list2.get(i).getRun_times()); 
+                    	ws.addCell(label);
+					}
+                wwb.write();//写入文件 
+				wwb.close();
+				os.close();
+				this.fanhuei="成功导成Excel!";
+				this.action="filedownload.action?inputPath="+this.xlsfilename;
+			}catch(Exception e){
+				this.fanhuei="导出失败!";
+			}
+		
+		return SUCCESS;
+	}
+	//查询车牌号变更申请
+	public String findvehiclechange(){
+		list3=f.findvehiclechange(stime,etime,vehicle_no,new_vehicle);
+		return SUCCESS;
+	}
+	//增加车牌号变更申请
+	public String addvehiclechange(){
+		info=f.addvehiclechange(vehicle_no,new_vehicle);
+		return SUCCESS;
+	}
+	//修改车牌号变更申请
+	public String editvehiclechange(){
+		info=f.editvehiclechange(vehicle_no,new_vehicle,id);
+		return SUCCESS;
+	}
+	//删除车牌号变更申请
+	public String deletevehiclechange(){
+		info=f.deletevehiclechange(id);
+		return SUCCESS;
+	}
+
+	public String findvehiclechangeexcle(){
+		try {
+			list3=f.findvehiclechange(stime,etime,vehicle_no,new_vehicle);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+			try{
+				Date date = new Date();
+				String logfile=ServletActionContext.getServletContext().getRealPath("/");
+				String dateStr2 = new Timestamp(date.getTime()).toString();
+				String MV_VERSION="";
+				MV_VERSION=MV_VERSION+dateStr2.substring(0,4);
+				MV_VERSION=MV_VERSION+dateStr2.substring(5,7);
+				MV_VERSION=MV_VERSION+dateStr2.substring(8,10);
+				MV_VERSION=MV_VERSION+dateStr2.substring(11,13);
+				MV_VERSION=MV_VERSION+dateStr2.substring(14,16);
+				MV_VERSION=MV_VERSION+dateStr2.substring(17,19);
+				logfile=logfile+"count\\";
+				File file1 = new File(logfile);//创建文件夹
+				if (!file1.exists()) {
+					file1.mkdir();
+					//System.err.println(file + " 文件夹已创建！");
+				}
+				DelAllFile d=new DelAllFile();
+				d.delAllFile(logfile);
+				File file= new File(logfile+""+MV_VERSION+".xls"); 
+				this.xlsfilename=""+MV_VERSION+".xls";
+				//this.xlsfilepath="//evaluation//"+xlsfilename;
+				file.createNewFile(); //建立要输出的文件 
+
+				OutputStream os = new FileOutputStream(file);//使用文件缓冲 
+
+				WritableWorkbook wwb = Workbook.createWorkbook(os);//取EXCEL操作实例 
+
+				WritableSheet ws = wwb.createSheet("车辆转入申请",0);//创建Excel工作表 指定名称和位置 
+				Label label ;
+            	label = new Label(0,0,"原车牌号码"); 
+            	ws.addCell(label);
+            	label = new Label(1,0,"现车牌号码"); 
+            	ws.addCell(label);
+            	label = new Label(2,0,"申请时间"); 
+            	ws.addCell(label);
+            	label = new Label(3,0,"审核状态"); 
+            	ws.addCell(label);
+            	label = new Label(4,0,"审核时间");           	
+            	ws.addCell(label);
+            	label = new Label(5,0,"审核原因"); 
+            	ws.addCell(label);
+                	for (int i = 0; i < list3.size(); i++) {
+                    	label = new Label(0,i+1,list3.get(i).getVehi_no()); 
+                    	ws.addCell(label);
+                    	label = new Label(1,i+1,list3.get(i).getComp_name()); 
+                    	ws.addCell(label);
+                    	label = new Label(2,i+1,list3.get(i).getOwn_name()); 
+                    	ws.addCell(label);                  	
+                    	label = new Label(3,i+1,list3.get(i).getVehi_sim()); 
+                    	ws.addCell(label);
+                    	label = new Label(4,i+1,list3.get(i).getOwn_tel()); 
+                    	ws.addCell(label);
+                    	label = new Label(5,i+1,list3.get(i).getRun_times()); 
+                    	ws.addCell(label);
+					}
+                wwb.write();//写入文件 
+				wwb.close();
+				os.close();
+				this.fanhuei="成功导成Excel!";
+				this.action="filedownload.action?inputPath="+this.xlsfilename;
+			}catch(Exception e){
+				this.fanhuei="导出失败!";
+			}
+		
+		return SUCCESS;
+	}
+	
+	//查询新车牌号
+	public String findnewvehicle(){
+		list4=f.findnewvehicle();
+		return SUCCESS;
+	}
+
+	public String execute() throws Exception {
+		HttpSession session= ServletActionContext.getRequest().getSession();
+		session.setAttribute("vhic", vhic);
+		return SUCCESS;
+	}
+	
+	public String getTime() {
+		return time;
+	}
+	public void setTime(String time) {
+		this.time = time;
+	}
+	
+	public List<Vehicle> getVehicle() {
+		return vehicle;
+	}
+	public void setVehicle(List<Vehicle> vehicle) {
+		this.vehicle = vehicle;
+	}
+	public List<Vhic> getList() {
+		return list;
+	}
+	public void setList(List<Vhic> list) {
+		this.list = list;
+	}
+	public List<String> getList1() {
+		return list1;
+	}
+	public void setList1(List<String> list1) {
+		this.list1 = list1;
+	}
+	public ApplyDao getF() {
+		return f;
+	}
+	public void setF(ApplyDao f) {
+		this.f = f;
+	}
+	public String getQuyu() {
+		return quyu;
+	}
+	public void setQuyu(String quyu) {
+		this.quyu = quyu;
+	}
+	public String getDay() {
+		return day;
+	}
+	public void setDay(String day) {
+		this.day = day;
+	}
+	public String getSpeed() {
+		return speed;
+	}
+	public void setSpeed(String speed) {
+		this.speed = speed;
+	}
+	public List<Vhic> getList2() {
+		return list2;
+	}
+	public void setList2(List<Vhic> list2) {
+		this.list2 = list2;
+	}
+	public String getI() {
+		return i;
+	}
+	public void setI(String i) {
+		this.i = i;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public List<Vhic> getList3() {
+		return list3;
+	}
+	public void setList3(List<Vhic> list3) {
+		this.list3 = list3;
+	}
+	public String getXlsfilename() {
+		return xlsfilename;
+	}
+	public void setXlsfilename(String xlsfilename) {
+		this.xlsfilename = xlsfilename;
+	}
+	public String getFanhuei() {
+		return fanhuei;
+	}
+	public void setFanhuei(String fanhuei) {
+		this.fanhuei = fanhuei;
+	}
+	public String getAction() {
+		return action;
+	}
+	public void setAction(String action) {
+		this.action = action;
+	}
+	public List<Vhic> getListexcle() {
+		return listexcle;
+	}
+	public void setListexcle(List<Vhic> listexcle) {
+		this.listexcle = listexcle;
+	}
+	public List<Vhic> getList4() {
+		return list4;
+	}
+	public void setList4(List<Vhic> list4) {
+		this.list4 = list4;
+	}
+	public List<Vhic> getList5() {
+		return list5;
+	}
+	public void setList5(List<Vhic> list5) {
+		this.list5 = list5;
+	}
+	public List<Vhic> getList6() {
+		return list6;
+	}
+	public void setList6(List<Vhic> list6) {
+		this.list6 = list6;
+	}
+	
+	public List<Vhic> getList7() {
+		return list7;
+	}
+	public void setList7(List<Vhic> list7) {
+		this.list7 = list7;
+	}
+	
+	public List<Vhic> getList8() {
+		return list8;
+	}
+	public void setList8(List<Vhic> list8) {
+		this.list8 = list8;
+	}
+	public String getStime() {
+		return stime;
+	}
+	public void setStime(String stime) {
+		this.stime = stime;
+	}
+	public String getEtime() {
+		return etime;
+	}
+	public void setEtime(String etime) {
+		this.etime = etime;
+	}
+	public String getCompname() {
+		return compname;
+	}
+	public void setCompname(String compname) {
+		this.compname = compname;
+	}
+	public String getCompid() {
+		return compid;
+	}
+	public void setCompid(String compid) {
+		this.compid = compid;
+	}
+	public String getAreaid() {
+		return areaid;
+	}
+	public void setAreaid(String areaid) {
+		this.areaid = areaid;
+	}
+	public String getVhic() {
+		return vhic;
+	}
+	public void setVhic(String vhic) {
+		this.vhic = vhic;
+	}
+
+	public String getVehicle_no() {
+		return vehicle_no;
+	}
+
+	public void setVehicle_no(String vehicle_no) {
+		this.vehicle_no = vehicle_no;
+	}
+	public String getInfo() {
+		return info;
+	}
+	public void setInfo(String info) {
+		this.info = info;
+	}
+	public String getReason() {
+		return reason;
+	}
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+	public String getNew_vehicle() {
+		return new_vehicle;
+	}
+	public void setNew_vehicle(String new_vehicle) {
+		this.new_vehicle = new_vehicle;
+	}
+	
+}
